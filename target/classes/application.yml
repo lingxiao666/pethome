@@ -1,0 +1,17 @@
+server:
+  port: 8080
+spring:
+  datasource:
+    username: root
+    password: 123456
+    url: jdbc:mysql:///pethome
+    driver-class-name: com.mysql.jdbc.Driver
+mybatis:
+  type-aliases-package: cn.lingxiao.org.domain,cn.lingxiao.org.query
+
+#配置日志
+logging:
+  level:
+    cn: #这里是2个TAB，一个要报错
+      lingxiao: trace #指定cn.itsource包下的输出级别为trace，详细信息，最小级别
+  root: error

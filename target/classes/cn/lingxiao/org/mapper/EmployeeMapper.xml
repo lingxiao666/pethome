@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.lingxiao.org.mapper.EmployeeMapper">
+    <!--添加数据-->
+    <!--void save(Employee d);-->
+    <insert id="save" parameterType="Employee">
+        insert into t_employee(
+            username,
+            email,
+            phone,
+            password,
+            age,
+            state,
+            department_id
+        ) values (
+           #{username},
+           #{email},
+           #{phone},
+           #{password},
+           #{age},
+           #{state},
+           #{department.id}
+        )
+    </insert>
+    <!--删除指定数据-->
+    <!--void remove(Long id);-->
+    <delete id="remove" parameterType="Long">
+        delete from t_employee where id=#{id}
+    </delete>
+    <!--更新数据-->
+    <!--void update(Employee d);-->
+    <update id="update" parameterType="Employee">
+    update t_employee set
+            username=#{username},
+            email=#{email},
+            phone=#{phone},
+            password=#{password},
+            age=#{age},
+            state=#{state},
+            department_id=#{department.id}
+            where id=#{id}
+    </update>
+    <!--查找指定ID数据-->
+    <!--    Employee loadById(Long id);-->
+    <select id="loadById" resultType="Employee" parameterType="long">
+        select * from t_employee where  id=#{id}
+    </select>
+    <!--查询所有数据-->
+    <!--List<Employee> loadAll();-->
+    <select id="loadAll" resultType="Employee">
+    select * from t_employee
+    </select>
+    <!--  //查询总条数
+      Long queryCount(EmployeeQuery query);-->
+    <select id="queryCount" parameterType="EmployeeQuery" resultType="Long">
+        select count(*) from t_employee e
+        <include refid="wheresql"></include>
+    </select>
+    <!--//查询当前的页数
+    List<Employee> queryData(EmployeeQuery query);-->
+    <select id="queryData" parameterType="EmployeeQuery" resultMap="EmployeeMap">
+        SELECT
+        e.username,
+        e.email,
+        e.phone,
+        e.password,
+        e.age,
+        e.state,
+        d.`id` did,
+        d.`name` dname
+        FROM
+        t_employee e
+        LEFT JOIN t_department d ON e.department_id=d.id
+        <include refid="wheresql"></include>
+        limit #{start},#{pageSize}
+    </select>
+    <resultMap id="EmployeeMap" type="Employee">
+        <id property="id" column="id"></id>
+        <result property="username" column="username"></result>
+        <result property="email" column="email"></result>
+        <result property="phone" column="phone"></result>
+        <result property="password" column="password"></result>
+        <result property="age" column="age"></result>
+        <result property="state" column="state"></result>
+        <!--一对一 association
+         一个用户对应多个订单，使用collection映射
+        -->
+        <association property="department" javaType="Department">
+            <result property="id" column="did"></result>
+            <result property="name" column="dname"></result>
+        </association>
+    </resultMap>
+    <!--高级查询-->
+    <sql id="wheresql">
+        <where>
+            <if test="keyWord!=null and keyWord.trim()!=''">
+                and (e.username like concat('%',trim(#{keyWord}),'%') or e.email like concat('%',trim(#{keyWord}),'%'))
+            </if>
+        </where>
+    </sql>
+    <!--批量删除-->
+    <!-- void bulkRemove(List<Long> ids);-->
+    <delete id="bulkRemove" parameterType="arrayList">
+        delete from t_employee where id in
+        <foreach collection="list" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </delete>
+
+
+</mapper>

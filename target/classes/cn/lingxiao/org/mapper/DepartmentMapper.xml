@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.lingxiao.org.mapper.DepartmentMapper">
+    <!--void save(Department d);-->
+    <insert id="save" parameterType="Department">
+        insert into t_department(
+            sn,
+            name,
+            dirPath,
+            state,
+            manager_id,
+            parent_id
+        ) values (
+           #{sn},
+           #{name},
+           #{dirPath},
+           #{state},
+           #{manager.id},
+           #{parent.id}
+        )
+    </insert>
+    <!--void remove(Long id);-->
+    <delete id="remove" parameterType="Long">
+        delete from t_department where id=#{id}
+    </delete>
+    <!--void update(Department d);-->
+    <update id="update" parameterType="Department">
+    update t_department set
+            sn=#{sn},
+            name=#{name},
+            dirPath=#{dirPath},
+            state=#{state},
+            manager_id=#{manager.id},
+            parent_id=#{parent.id}
+            where id=#{id}
+    </update>
+    <!--    Department loadById(Long id);-->
+    <select id="loadById" resultType="Department" parameterType="long">
+        select * from t_department where  id=#{id}
+    </select>
+    <!--List<Department> loadAll();-->
+    <select id="loadAll" resultType="Department">
+    select * from t_department
+    </select>
+    <!--  //查询总条数
+      Long queryCount(DepartmentQuery query);-->
+    <select id="queryCount" parameterType="DepartmentQuery" resultType="Long">
+    select count(*) from t_department d
+        <include refid="wheresql"></include>
+    </select>
+    <!--//查询当前的数据
+    List<Department> queryData(DepartmentQuery query);-->
+    <select id="queryData" parameterType="DepartmentQuery" resultMap="DepartmentMap">
+        SELECT
+            d.*, e.id eid,
+            e.username,
+            p.id pid,
+            p.name pname
+        FROM
+            t_department d
+        LEFT JOIN t_employee e ON d.manager_id = e.id
+        LEFT JOIN t_department p ON d.parent_id = p.id
+        <include refid="wheresql"></include>
+        limit #{start},#{pageSize}
+    </select>
+    <resultMap id="DepartmentMap" type="Department">
+        <!--简单属性-->
+        <id property="id" column="id"></id>
+        <result property="name" column="name"></result>
+        <result property="sn" column="sn"></result>
+        <result property="dirPath" column="dirPath"></result>
+        <result property="state" column="state"></result>
+        <association property="manager" javaType="Employee">
+            <result property="id" column="eid"></result>
+            <result property="username" column="username"></result>
+        </association>
+        <association property="parent" javaType="Department">
+            <result property="id" column="pid"></result>
+            <result property="name" column="pname"></result>
+        </association>
+    </resultMap>
+    <sql id="wheresql">
+        <where>
+            <if test="keyWord!=null and keyWord.trim()!=''">
+                and (d.name like concat('%',trim(#{keyWord}),'%') or d.sn like concat('%',trim(#{keyWord}),'%'))
+            </if>
+        </where>
+    </sql>
+
+    <!-- void bulkRemove(List<Long> ids);-->
+    <delete id="bulkRemove" parameterType="arrayList">
+        delete from t_department where id in
+        <foreach collection="list" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </delete>
+    <!--上级部门的查询-->
+    <!--List<Department> findTree();-->
+    <select id="loadTree" resultMap="departTreeMap">
+        SELECT
+            d.id,
+            d. NAME,
+            p.id pid,
+            p. NAME pname
+        FROM
+            t_department d
+        LEFT JOIN t_department p ON d.id = p.parent_id
+        WHERE
+            d.parent_id IS NULL
+    </select>
+    <resultMap id="departTreeMap" type="Department">
+        <id property="id" column="id"></id>
+        <result property="name" column="name"></result>
+        <collection property="chailren" javaType="arrayList" ofType="Department">
+            <result property="id" column="pid"></result>
+            <result property="name" column="pname"></result>
+        </collection>
+    </resultMap>
+</mapper>
